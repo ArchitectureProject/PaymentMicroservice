@@ -1,6 +1,7 @@
 package com.efrei.paymentmicroservice.service;
 
 import com.efrei.paymentmicroservice.exception.custom.PaymentAttemptNotFoundException;
+import com.efrei.paymentmicroservice.exception.custom.WrongUserRoleException;
 import com.efrei.paymentmicroservice.model.PaymentAttempt;
 import com.efrei.paymentmicroservice.model.PaymentResult;
 import com.efrei.paymentmicroservice.model.PaymentState;
@@ -9,6 +10,8 @@ import com.efrei.paymentmicroservice.model.dto.PaymentToProcess;
 import com.efrei.paymentmicroservice.model.dto.ProcessedPayment;
 import com.efrei.paymentmicroservice.model.dto.ReceivedPaymentAttempt;
 import com.efrei.paymentmicroservice.repository.PaymentRepository;
+import com.efrei.paymentmicroservice.model.UserRole;
+import com.efrei.paymentmicroservice.utils.JwtUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -18,17 +21,21 @@ import java.util.List;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-
     private final MessagePublisherService messagePublisherService;
+    private final JwtUtils jwtUtils;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
-                              MessagePublisherService messagePublisherService) {
+                              MessagePublisherService messagePublisherService,
+                              JwtUtils jwtUtils) {
         this.paymentRepository = paymentRepository;
         this.messagePublisherService = messagePublisherService;
+        this.jwtUtils = jwtUtils;
     }
 
     @Override
-    public PaymentAttempt createPaymentAttempt(ReceivedPaymentAttempt receivedPaymentAttempt) {
+    public PaymentAttempt createPaymentAttempt(String bearerToken, ReceivedPaymentAttempt receivedPaymentAttempt) {
+        jwtUtils.validateJwt(bearerToken.substring(7), null);
+
         PaymentAttempt paymentAttempt = new PaymentAttempt();
         paymentAttempt.setLaunchedAt(Instant.now().toEpochMilli());
         paymentAttempt.setSessionId(receivedPaymentAttempt.sessionId());
@@ -69,13 +76,20 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public List<PaymentAttempt> getAllPaymentAttempts() {
+    public List<PaymentAttempt> getAllPaymentAttempts(String bearerToken) {
+        if(!jwtUtils.validateJwt(bearerToken.substring(7), UserRole.AGENT)){
+            throw new WrongUserRoleException("User role does not gives him rights to call this endpoint");
+        }
+
         return paymentRepository.findAll();
     }
 
     @Override
-    public PaymentAttempt getPaymentAttemptById(String paymentId) {
-        return paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentAttemptNotFoundException("Payment attempt not found with id: " + paymentId));
+    public PaymentAttempt getPaymentAttemptById(String bearerToken, String id) {
+        if(!jwtUtils.validateJwt(bearerToken.substring(7), UserRole.AGENT)){
+            throw new WrongUserRoleException("User role does not gives him rights to call this endpoint");
+        }
+        return paymentRepository.findById(id)
+                .orElseThrow(() -> new PaymentAttemptNotFoundException("Payment attempt not found with id: " + id));
     }
 }

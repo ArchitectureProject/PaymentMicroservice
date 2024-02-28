@@ -7,8 +7,8 @@ import com.efrei.paymentmicroservice.model.dto.ReceivedPaymentAttempt;
 import java.util.List;
 
 public interface PaymentService {
-    PaymentAttempt createPaymentAttempt(ReceivedPaymentAttempt receivedPaymentAttempt);
+    PaymentAttempt createPaymentAttempt(String bearerToken, ReceivedPaymentAttempt receivedPaymentAttempt);
     PaymentAttempt handleProcessedPayments(ProcessedPayment processedPayment);
-    List<PaymentAttempt> getAllPaymentAttempts();
-    PaymentAttempt getPaymentAttemptById(String paymentId);
+    List<PaymentAttempt> getAllPaymentAttempts(String bearerToken);
+    PaymentAttempt getPaymentAttemptById(String bearerToke, String paymentId);
 }

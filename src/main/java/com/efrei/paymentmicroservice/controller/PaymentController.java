@@ -17,18 +17,20 @@ public class PaymentController {
     }
 
     @PostMapping("/payment-attempt")
-    public PaymentAttempt createPaymentAttempt(@RequestBody ReceivedPaymentAttempt receivedPaymentAttempt) {
-        return paymentService.createPaymentAttempt(receivedPaymentAttempt);
+    public PaymentAttempt createPaymentAttempt(@RequestHeader(name = "Authorization") String bearerToken,
+                                               @RequestBody ReceivedPaymentAttempt receivedPaymentAttempt) {
+        return paymentService.createPaymentAttempt(bearerToken, receivedPaymentAttempt);
     }
 
     @GetMapping("/payment-attempt")
-    public List<PaymentAttempt> getAllPaymentAttempts(){
-        return paymentService.getAllPaymentAttempts();
+    public List<PaymentAttempt> getAllPaymentAttempts(@RequestHeader(name = "Authorization") String bearerToken){
+        return paymentService.getAllPaymentAttempts(bearerToken);
     }
 
     @GetMapping("/payment-attempt/{id}")
-    public PaymentAttempt getPaymentAttemptById(@PathVariable String id){
-        return paymentService.getPaymentAttemptById(id);
+    public PaymentAttempt getPaymentAttemptById(@RequestHeader(name = "Authorization") String bearerToken,
+                                                @PathVariable String id){
+        return paymentService.getPaymentAttemptById(bearerToken, id);
     }
 
 
