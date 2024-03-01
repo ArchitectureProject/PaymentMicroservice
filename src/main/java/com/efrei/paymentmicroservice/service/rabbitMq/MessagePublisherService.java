@@ -1,4 +1,4 @@
-package com.efrei.paymentmicroservice.service;
+package com.efrei.paymentmicroservice.service.rabbitMq;
 
 import com.efrei.paymentmicroservice.model.dto.PaymentToProcess;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

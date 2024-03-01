@@ -11,6 +11,7 @@ import com.efrei.paymentmicroservice.model.dto.ProcessedPayment;
 import com.efrei.paymentmicroservice.model.dto.ReceivedPaymentAttempt;
 import com.efrei.paymentmicroservice.repository.PaymentRepository;
 import com.efrei.paymentmicroservice.model.UserRole;
+import com.efrei.paymentmicroservice.service.rabbitMq.MessagePublisherService;
 import com.efrei.paymentmicroservice.utils.JwtUtils;
 import org.springframework.stereotype.Service;
 

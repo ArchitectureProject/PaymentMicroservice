@@ -1,6 +1,7 @@
-package com.efrei.paymentmicroservice.service;
+package com.efrei.paymentmicroservice.service.rabbitMq;
 
 import com.efrei.paymentmicroservice.model.dto.ProcessedPayment;
+import com.efrei.paymentmicroservice.service.PaymentService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
