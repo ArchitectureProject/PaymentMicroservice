@@ -85,6 +85,10 @@ public class PaymentServiceImpl implements PaymentService {
         if(paymentState.equals(PaymentState.DONE)){
             handleSuccessfulPayment(paymentAttempt);
         }
+        else {
+            handleUnsuccessfulPayment(paymentAttempt);
+        }
+
         return paymentAttempt;
     }
 
@@ -114,12 +118,40 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void sendEmailForSuccessfulPayment(PaymentAttempt paymentAttempt){
         User user = userProvider.getUserById("Bearer " + paymentAttempt.getBearerToken(), paymentAttempt.getUserId());
-        MailSenderRequest mailSenderRequest = createSuccessfulPaymentMailRequest(paymentAttempt.getUserId(), user.email());
+        MailSenderRequest mailSenderRequest = createSuccessfulPaymentMailRequest(paymentAttempt, user.email());
         mailSenderProvider.sendEmail("Bearer " + paymentAttempt.getBearerToken(), mailSenderRequest);
     }
 
-    private MailSenderRequest createSuccessfulPaymentMailRequest(String userId, String userEmail){
-        MailSenderParam mailSenderParam = new MailSenderParam("name", userId);
-        return new MailSenderRequest("test1", List.of(mailSenderParam), userEmail, "You got mail !");
+    private MailSenderRequest createSuccessfulPaymentMailRequest(PaymentAttempt paymentAttempt, String userEmail){
+        MailSenderParam mailSenderParam1 = new MailSenderParam("name",userEmail);
+        MailSenderParam mailSenderParam2 = new MailSenderParam("paymentType", paymentAttempt.getPaymentType().emailName);
+        MailSenderParam mailSenderParam3 = new MailSenderParam("amount", String.valueOf(paymentAttempt.getAmount()));
+        return new MailSenderRequest(
+                "successfulPayment",
+                List.of(mailSenderParam1, mailSenderParam2, mailSenderParam3),
+                userEmail,
+                "Thank you for your purchase !");
+    }
+
+    private void handleUnsuccessfulPayment(PaymentAttempt paymentAttempt){
+        //TODO
+        sendEmailForUnsuccessfulPayment(paymentAttempt);
+        //Send request to session to update the flag
+    }
+
+    private void sendEmailForUnsuccessfulPayment(PaymentAttempt paymentAttempt){
+        User user = userProvider.getUserById("Bearer " + paymentAttempt.getBearerToken(), paymentAttempt.getUserId());
+        MailSenderRequest mailSenderRequest = createUnsuccessfulPaymentMailRequest(paymentAttempt, user.email());
+        mailSenderProvider.sendEmail("Bearer " + paymentAttempt.getBearerToken(), mailSenderRequest);
+    }
+
+    private MailSenderRequest createUnsuccessfulPaymentMailRequest(PaymentAttempt paymentAttempt, String userEmail){
+        MailSenderParam mailSenderParam1 = new MailSenderParam("name", userEmail);
+        MailSenderParam mailSenderParam2 = new MailSenderParam("amount", String.valueOf(paymentAttempt.getAmount()));
+        return new MailSenderRequest(
+                "refusedPayment",
+                List.of(mailSenderParam1, mailSenderParam2),
+                userEmail,
+                "Your payment have been refused");
     }
 }
