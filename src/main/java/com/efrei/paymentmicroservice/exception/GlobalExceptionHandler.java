@@ -1,8 +1,6 @@
 package com.efrei.paymentmicroservice.exception;
 
-import com.efrei.paymentmicroservice.exception.custom.JWTException;
-import com.efrei.paymentmicroservice.exception.custom.PaymentAttemptNotFoundException;
-import com.efrei.paymentmicroservice.exception.custom.WrongUserRoleException;
+import com.efrei.paymentmicroservice.exception.custom.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,5 +33,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         String bodyOfResponse = ex.getMessage();
         return handleExceptionInternal(ex, bodyOfResponse,
                 new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler({EmailSenderMicroserviceException.class, UserMicroserviceException.class})
+    protected ResponseEntity<Object> handleMicroserviceCallError(
+            RuntimeException ex, WebRequest request) {
+        String bodyOfResponse = ex.getMessage();
+        return handleExceptionInternal(ex, bodyOfResponse,
+                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 }

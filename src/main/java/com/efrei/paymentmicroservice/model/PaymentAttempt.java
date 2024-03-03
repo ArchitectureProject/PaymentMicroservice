@@ -1,9 +1,6 @@
 package com.efrei.paymentmicroservice.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class PaymentAttempt {
@@ -21,6 +18,9 @@ public class PaymentAttempt {
     private String sessionId;
 
     private String userId;
+
+    @Column(columnDefinition = "TEXT")
+    private String bearerToken;
 
     private float amount;
 
@@ -88,5 +88,28 @@ public class PaymentAttempt {
 
     public void setCreditCardInfos(CreditCardInfos creditCardInfos) {
         this.creditCardInfos = creditCardInfos;
+    }
+
+    public String getBearerToken() {
+        return bearerToken;
+    }
+
+    public void setBearerToken(String bearerToken) {
+        this.bearerToken = bearerToken;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentAttempt{" +
+                "id='" + id + '\'' +
+                ", paymentState=" + paymentState +
+                ", paymentType=" + paymentType +
+                ", launchedAt=" + launchedAt +
+                ", sessionId='" + sessionId + '\'' +
+                ", userId='" + userId + '\'' +
+                ", bearerToken='" + bearerToken + '\'' +
+                ", amount=" + amount +
+                ", creditCardInfos=" + creditCardInfos +
+                '}';
     }
 }

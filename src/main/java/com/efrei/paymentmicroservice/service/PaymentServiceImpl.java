@@ -6,9 +6,9 @@ import com.efrei.paymentmicroservice.model.PaymentAttempt;
 import com.efrei.paymentmicroservice.model.PaymentResult;
 import com.efrei.paymentmicroservice.model.PaymentState;
 import com.efrei.paymentmicroservice.model.PaymentType;
-import com.efrei.paymentmicroservice.model.dto.PaymentToProcess;
-import com.efrei.paymentmicroservice.model.dto.ProcessedPayment;
-import com.efrei.paymentmicroservice.model.dto.ReceivedPaymentAttempt;
+import com.efrei.paymentmicroservice.model.dto.*;
+import com.efrei.paymentmicroservice.provider.mailSender.MailSenderProvider;
+import com.efrei.paymentmicroservice.provider.user.UserProvider;
 import com.efrei.paymentmicroservice.repository.PaymentRepository;
 import com.efrei.paymentmicroservice.model.UserRole;
 import com.efrei.paymentmicroservice.service.rabbitMq.MessagePublisherService;
@@ -24,13 +24,15 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final MessagePublisherService messagePublisherService;
     private final JwtUtils jwtUtils;
+    private final MailSenderProvider mailSenderProvider;
+    private final UserProvider userProvider;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository,
-                              MessagePublisherService messagePublisherService,
-                              JwtUtils jwtUtils) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, MessagePublisherService messagePublisherService, JwtUtils jwtUtils, MailSenderProvider mailSenderProvider, UserProvider userProvider) {
         this.paymentRepository = paymentRepository;
         this.messagePublisherService = messagePublisherService;
         this.jwtUtils = jwtUtils;
+        this.mailSenderProvider = mailSenderProvider;
+        this.userProvider = userProvider;
     }
 
     @Override
@@ -43,6 +45,7 @@ public class PaymentServiceImpl implements PaymentService {
         paymentAttempt.setUserId(receivedPaymentAttempt.userId());
         paymentAttempt.setAmount(receivedPaymentAttempt.amount());
         paymentAttempt.setPaymentType(receivedPaymentAttempt.paymentType());
+        paymentAttempt.setBearerToken(bearerToken.substring(7));
         if(paymentAttempt.getPaymentType().equals(PaymentType.CREDIT_CARD)){
             paymentAttempt.setCreditCardInfos(receivedPaymentAttempt.creditCardInfos());
             paymentAttempt.setPaymentState(PaymentState.PENDING);
@@ -60,6 +63,10 @@ public class PaymentServiceImpl implements PaymentService {
             );
             messagePublisherService.sendMessage(paymentToProcess);
         }
+        else if(paymentAttempt.getPaymentType().equals(PaymentType.CASH)){
+            handleSuccessfulPayment(paymentAttempt);
+        }
+
         return paymentAttempt;
     }
 
@@ -72,8 +79,13 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.changePaymentAttemptState(paymentState, processedPayment.paymentId());
 
-        return paymentRepository.findById(processedPayment.paymentId())
+        PaymentAttempt paymentAttempt = paymentRepository.findById(processedPayment.paymentId())
                 .orElseThrow(() -> new PaymentAttemptNotFoundException("Payment attempt not found with id: " + processedPayment.paymentId()));
+
+        if(paymentState.equals(PaymentState.DONE)){
+            handleSuccessfulPayment(paymentAttempt);
+        }
+        return paymentAttempt;
     }
 
     @Override
@@ -92,5 +104,22 @@ public class PaymentServiceImpl implements PaymentService {
         }
         return paymentRepository.findById(id)
                 .orElseThrow(() -> new PaymentAttemptNotFoundException("Payment attempt not found with id: " + id));
+    }
+
+    private void handleSuccessfulPayment(PaymentAttempt paymentAttempt){
+        //TODO
+        sendEmailForSuccessfulPayment(paymentAttempt);
+        //Send request to session to update the flag and the amount
+    }
+
+    private void sendEmailForSuccessfulPayment(PaymentAttempt paymentAttempt){
+        User user = userProvider.getUserById("Bearer " + paymentAttempt.getBearerToken(), paymentAttempt.getUserId());
+        MailSenderRequest mailSenderRequest = createSuccessfulPaymentMailRequest(paymentAttempt.getUserId(), user.email());
+        mailSenderProvider.sendEmail("Bearer " + paymentAttempt.getBearerToken(), mailSenderRequest);
+    }
+
+    private MailSenderRequest createSuccessfulPaymentMailRequest(String userId, String userEmail){
+        MailSenderParam mailSenderParam = new MailSenderParam("name", userId);
+        return new MailSenderRequest("test1", List.of(mailSenderParam), userEmail, "You got mail !");
     }
 }
