@@ -1,5 +1,6 @@
 package com.efrei.paymentmicroservice.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -19,6 +20,7 @@ public class PaymentAttempt {
 
     private String userId;
 
+    @JsonIgnore
     @Column(columnDefinition = "TEXT")
     private String bearerToken;
 

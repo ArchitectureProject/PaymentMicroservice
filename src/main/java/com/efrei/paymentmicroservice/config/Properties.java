@@ -13,6 +13,8 @@ public class Properties {
 
     private String userMicroserviceBaseUrl;
 
+    private String sessionMicroserviceBaseUrl;
+
     public String getJwkUrl() {
         return jwkUrl;
     }
@@ -35,5 +37,13 @@ public class Properties {
 
     public void setUserMicroserviceBaseUrl(String userMicroserviceBaseUrl) {
         this.userMicroserviceBaseUrl = userMicroserviceBaseUrl;
+    }
+
+    public String getSessionMicroserviceBaseUrl() {
+        return sessionMicroserviceBaseUrl;
+    }
+
+    public void setSessionMicroserviceBaseUrl(String sessionMicroserviceBaseUrl) {
+        this.sessionMicroserviceBaseUrl = sessionMicroserviceBaseUrl;
     }
 }

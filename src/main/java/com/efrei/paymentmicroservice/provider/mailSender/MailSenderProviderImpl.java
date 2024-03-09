@@ -34,6 +34,5 @@ public class MailSenderProviderImpl implements MailSenderProvider {
         } catch (Exception e) {
             throw new EmailSenderMicroserviceException("EmailSender microservice /mail-sender/send sent back an error", e);
         }
-
     }
 }

@@ -8,6 +8,7 @@ import com.efrei.paymentmicroservice.model.PaymentState;
 import com.efrei.paymentmicroservice.model.PaymentType;
 import com.efrei.paymentmicroservice.model.dto.*;
 import com.efrei.paymentmicroservice.provider.mailSender.MailSenderProvider;
+import com.efrei.paymentmicroservice.provider.session.SessionProvider;
 import com.efrei.paymentmicroservice.provider.user.UserProvider;
 import com.efrei.paymentmicroservice.repository.PaymentRepository;
 import com.efrei.paymentmicroservice.model.UserRole;
@@ -27,12 +28,20 @@ public class PaymentServiceImpl implements PaymentService {
     private final MailSenderProvider mailSenderProvider;
     private final UserProvider userProvider;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, MessagePublisherService messagePublisherService, JwtUtils jwtUtils, MailSenderProvider mailSenderProvider, UserProvider userProvider) {
+    private final SessionProvider sessionProvider;
+
+    public PaymentServiceImpl(PaymentRepository paymentRepository,
+                              MessagePublisherService messagePublisherService,
+                              JwtUtils jwtUtils,
+                              MailSenderProvider mailSenderProvider,
+                              UserProvider userProvider,
+                              SessionProvider sessionProvider) {
         this.paymentRepository = paymentRepository;
         this.messagePublisherService = messagePublisherService;
         this.jwtUtils = jwtUtils;
         this.mailSenderProvider = mailSenderProvider;
         this.userProvider = userProvider;
+        this.sessionProvider = sessionProvider;
     }
 
     @Override
@@ -111,9 +120,12 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void handleSuccessfulPayment(PaymentAttempt paymentAttempt){
-        //TODO
         sendEmailForSuccessfulPayment(paymentAttempt);
-        //Send request to session to update the flag and the amount
+        sessionProvider.sendPaymentActualisation(
+                "Bearer " + paymentAttempt.getBearerToken(),
+                paymentAttempt.getSessionId(),
+                new PaymentActualisationRequest(paymentAttempt.getId(), paymentAttempt.getAmount())
+        );
     }
 
     private void sendEmailForSuccessfulPayment(PaymentAttempt paymentAttempt){
@@ -134,9 +146,12 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void handleUnsuccessfulPayment(PaymentAttempt paymentAttempt){
-        //TODO
         sendEmailForUnsuccessfulPayment(paymentAttempt);
-        //Send request to session to update the flag
+        sessionProvider.sendPaymentActualisation(
+                "Bearer " + paymentAttempt.getBearerToken(),
+                paymentAttempt.getSessionId(),
+                new PaymentActualisationRequest(paymentAttempt.getId(), 0)
+        );
     }
 
     private void sendEmailForUnsuccessfulPayment(PaymentAttempt paymentAttempt){

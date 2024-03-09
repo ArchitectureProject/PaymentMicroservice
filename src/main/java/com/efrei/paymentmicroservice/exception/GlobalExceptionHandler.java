@@ -35,10 +35,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
 
-    @ExceptionHandler({EmailSenderMicroserviceException.class, UserMicroserviceException.class})
+    @ExceptionHandler({
+            EmailSenderMicroserviceException.class,
+            UserMicroserviceException.class,
+            SessionMicroserviceException.class
+    })
     protected ResponseEntity<Object> handleMicroserviceCallError(
             RuntimeException ex, WebRequest request) {
-        String bodyOfResponse = ex.getMessage();
+        String bodyOfResponse = ex.getMessage() + "\n" + ex.getCause();
         return handleExceptionInternal(ex, bodyOfResponse,
                 new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
